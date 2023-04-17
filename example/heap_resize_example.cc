@@ -35,6 +35,9 @@ int main(int argc, char **argv)
 {
     init_log(boost::log::trivial::severity_level::fatal);
 
+    ResetNVMM();
+    StartNVMM();
+
     MemoryManager *mm = MemoryManager::GetInstance();
 
     // create a new 128MB NVM region with pool id 2

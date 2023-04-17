@@ -35,10 +35,13 @@ int main(int argc, char **argv)
 {
     init_log(boost::log::trivial::severity_level::fatal);
 
+    ResetNVMM();
+    StartNVMM();
+
     MemoryManager *mm = MemoryManager::GetInstance();
 
     // create a new 128MB NVM region with pool id 2
-    PoolId pool_id = 2;
+    PoolId pool_id = 1;
     size_t size = 128*1024*1024; // 128MB
     ErrorCode ret = mm->CreateHeap(pool_id, size);
     assert(ret == NO_ERROR);
