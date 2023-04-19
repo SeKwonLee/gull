@@ -82,6 +82,10 @@ NVMM runs on both NUMA and FAME ([Fabric-Attached Memory
  Please set CMAKE_PREFIX_PATH to point to nvml install directory if it is not in
  system path. If it does not work, set `PMEM_INCLUDE_DIR`, `PMEM_LIBRARY` directly.
 
+ ```
+ $ cmake .. -DFAME=OFF -DPMEM_INCLUDE_DIR=./../../nvml/install_dir/usr/local/include -DPMEM_LIBRARY=./../../nvml/install_dir/usr/local/lib/libpmem.so -DLOG=ON
+ ```
+
  On FAME:
 
  ```
