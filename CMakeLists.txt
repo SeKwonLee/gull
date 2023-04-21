@@ -54,8 +54,14 @@ if(FAME) # FAME
   message(STATUS "LFS enabled")
   message(STATUS "Lfs location: ${TMPFS_PATH}")
 else() # NUMA
-  set(TMPFS_PATH "/dev/shm")
-  message(STATUS "tmpfs location: ${TMPFS_PATH}")
+  if (NON_CONTAINER)
+      set(TMPFS_PATH "/dev/shm/numa1")
+      message(STATUS "tmpfs location: ${TMPFS_PATH}")
+  else()
+      set(TMPFS_PATH "/dev/shm")
+      add_definitions(-DENABLE_CONTAINER)
+      message(STATUS "tmpfs location: ${TMPFS_PATH}")
+  endif()
 endif()
 
 #
