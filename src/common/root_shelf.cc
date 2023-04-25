@@ -102,7 +102,7 @@ ErrorCode RootShelf::Create()
         LOG(fatal) << "RootShelf: Failed to truncate the root shelf file " << path_;
         return SHELF_FILE_CREATE_FAILED;
     }
-    void *addr = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    void *addr = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
     if (addr == MAP_FAILED)
     {
         LOG(fatal) << "RootShelf: Failed to mmap the root shelf file " << path_;
@@ -214,7 +214,7 @@ ErrorCode RootShelf::Open()
         return SHELF_FILE_OPEN_FAILED;
     }
 
-    addr_ = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED, fd_, 0);
+    addr_ = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd_, 0);
     if (addr_ == MAP_FAILED)
     {
         LOG(fatal) << "RootShelf: Failed to mmap the root shelf file " << path_;

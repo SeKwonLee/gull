@@ -216,7 +216,7 @@ ErrorCode ShelfFile::Map(void *addr_hint, size_t length, int prot, int flags,
         return SHELF_FILE_CLOSED;
     }
 
-    void *ret = mmap(addr_hint, length, prot, flags, fd_, offset);
+    void *ret = mmap(addr_hint, length, prot | MAP_POPULATE, flags, fd_, offset);
     if (ret != MAP_FAILED) {
         *mapped_addr = ret;
         if (register_fam_atomic == true) {

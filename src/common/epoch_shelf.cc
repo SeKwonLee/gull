@@ -105,7 +105,7 @@ ErrorCode EpochShelf::Create()
         LOG(fatal) << "EpochShelf: Failed to truncate the epoch shelf file " << path_;
         return SHELF_FILE_CREATE_FAILED;
     }
-    void *addr = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    void *addr = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
     if (addr == MAP_FAILED)
     {
         LOG(fatal) << "EpochShelf: Failed to mmap the epoch shelf file " << path_;
@@ -206,7 +206,7 @@ ErrorCode EpochShelf::Open()
         return SHELF_FILE_OPEN_FAILED;
     }
 
-    addr_ = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED, fd_, 0);
+    addr_ = mmap(NULL, kShelfSize, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd_, 0);
     if (addr_ == MAP_FAILED)
     {
         LOG(fatal) << "EpochShelf: Failed to mmap the epoch shelf file " << path_;
