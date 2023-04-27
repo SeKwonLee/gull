@@ -137,7 +137,7 @@ private:
     internal::EpochVector::Participant epoch_participant_;
     internal::DCLCRWLock               epoch_lock_;         // lock protecting local epoch advancement
     pthread_mutex_t                    active_epoch_mutex_; // mutex protecting active epoch count
-    int                                active_epoch_count_;
+    std::atomic<int>                   active_epoch_count_;
     std::thread                        monitor_thread_;
     std::thread                        heartbeat_thread_;
     std::atomic<bool>                  terminate_monitor_;

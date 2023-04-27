@@ -57,13 +57,13 @@ public:
 
 EpochManagerImpl::EpochManagerImpl(void *addr, bool may_create) :
     metadata_pool_(addr, MAX_POOL_SIZE),
-    active_epoch_count_(0),
     terminate_monitor_(false),
     terminate_heartbeat_(false),
     debug_level_(0),
     cb_(NULL),
     last_frontier_(0)
 {
+    active_epoch_count_.store(0);
     epoch_vec_ = new EpochVector(&*metadata_pool_, may_create);
 
     pid_ = ParticipantManager::get_self_id();
@@ -147,26 +147,22 @@ void EpochManagerImpl::report_frontier() {
 
 void EpochManagerImpl::enter_critical() {
     epoch_lock_.sharedLock();
-    pthread_mutex_lock(&active_epoch_mutex_);
-    if (active_epoch_count_++ == 0) {
+    if (active_epoch_count_.fetch_add(1) == 0) {
+        pthread_mutex_lock(&active_epoch_mutex_);
         report_frontier();
+        pthread_mutex_unlock(&active_epoch_mutex_);
     }
-    pthread_mutex_unlock(&active_epoch_mutex_);
 }
 
 
 void EpochManagerImpl::exit_critical() {
-    pthread_mutex_lock(&active_epoch_mutex_);
     active_epoch_count_--;
-    pthread_mutex_unlock(&active_epoch_mutex_);
     epoch_lock_.sharedUnlock();
 }
 
 
 bool EpochManagerImpl::exists_active_critical() {
-    pthread_mutex_lock(&active_epoch_mutex_);
-    bool active = active_epoch_count_ > 0;
-    pthread_mutex_unlock(&active_epoch_mutex_);
+    bool active = active_epoch_count_.load() > 0;
     return active;
 }
 
@@ -331,8 +327,8 @@ void EpochManagerImpl::heartbeat_thread_entry() {
         // new epoch operations from occuring so that we can update and report 
         // our local view of the frontier
         epoch_lock_.exclusiveLock();
+        assert(active_epoch_count_.load() == 0);
         pthread_mutex_lock(&active_epoch_mutex_);
-        assert(active_epoch_count_ == 0);
         report_frontier();
         pthread_mutex_unlock(&active_epoch_mutex_);
         epoch_lock_.exclusiveUnlock();
