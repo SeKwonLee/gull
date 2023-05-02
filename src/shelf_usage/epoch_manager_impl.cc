@@ -128,6 +128,10 @@ void EpochManagerImpl::disable_monitor()
         terminate_monitor_ = true;
         monitor_thread_.join();
     }
+    if (!terminate_heartbeat_) {
+        terminate_heartbeat_ = true;
+        heartbeat_thread_.join();
+    }
 }
 
 EpochCounter EpochManagerImpl::reported_epoch() {
