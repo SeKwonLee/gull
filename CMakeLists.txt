@@ -143,7 +143,7 @@ endif()
 # add boost
 #
 set(BOOST_ROOT $ENV{BOOST_ROOT})
-find_package(Boost 1.65 COMPONENTS log log_setup thread system filesystem REQUIRED)
+find_package(Boost 1.83 COMPONENTS log log_setup thread system filesystem REQUIRED)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIR})

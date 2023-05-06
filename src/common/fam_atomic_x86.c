@@ -327,6 +327,7 @@ static inline bool fam_atomic_get_fd_offset(void *address, int *dev_fd, int *lfs
 
 int32_t fam_atomic_32_fetch_add(int32_t *address, int32_t increment)
 {
+#ifdef NON_CACHE_COHERENT
 	int32_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -347,10 +348,14 @@ int32_t fam_atomic_32_fetch_add(int32_t *address, int32_t increment)
 	prev = args.p32_0;
 
 	return prev;
+#else
+    return (int32_t) __atomic_fetch_add((int32_t *) address, increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int64_t fam_atomic_64_fetch_add(int64_t *address, int64_t increment)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -371,10 +376,14 @@ int64_t fam_atomic_64_fetch_add(int64_t *address, int64_t increment)
 	prev = args.p64_0;
 
 	return prev;
+#else
+    return (int64_t) __atomic_fetch_add((int64_t *) address, increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int32_t fam_atomic_32_swap(int32_t *address, int32_t value)
 {
+#ifdef NON_CACHE_COHERENT
 	int32_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -395,10 +404,14 @@ int32_t fam_atomic_32_swap(int32_t *address, int32_t value)
 	prev = args.p32_0;
 
 	return prev;
+#else
+    return (int32_t) __atomic_exchange_n((int32_t *) address, value, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int64_t fam_atomic_64_swap(int64_t *address, int64_t value)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -419,6 +432,9 @@ int64_t fam_atomic_64_swap(int64_t *address, int64_t value)
 	prev = args.p64_0;
 
 	return prev;
+#else
+    return (int64_t) __atomic_exchange_n((int64_t *) address, value, __ATOMIC_ACQ_REL);
+#endif
 }
 
 void fam_atomic_128_swap(int64_t *address, int64_t value[2], int64_t result[2])
@@ -450,6 +466,7 @@ int32_t fam_atomic_32_compare_store(int32_t *address,
 						 int32_t compare,
 						 int32_t store)
 {
+#ifdef NON_CACHE_COHERENT
 	int32_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -471,12 +488,17 @@ int32_t fam_atomic_32_compare_store(int32_t *address,
 	prev = args.p32_0;
 
 	return prev;
+#else
+    __atomic_compare_exchange_n((int32_t *) address, &compare, store, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+    return compare;
+#endif
 }
 
 int64_t fam_atomic_64_compare_store(int64_t *address,
 					  	 int64_t compare,
 						 int64_t store)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev;
 	int dev_fd, lfs_fd;
 	int64_t offset;
@@ -498,6 +520,10 @@ int64_t fam_atomic_64_compare_store(int64_t *address,
 	prev = args.p64_0;
 
 	return prev;
+#else
+    __atomic_compare_exchange_n((int64_t *) address, &compare, store, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+    return compare;
+#endif
 }
 
 void fam_atomic_128_compare_store(int64_t *address,
@@ -532,12 +558,20 @@ void fam_atomic_128_compare_store(int64_t *address,
 
 int32_t fam_atomic_32_read(int32_t *address)
 {
+#ifdef NON_CACHE_COHERENT
 	return fam_atomic_32_fetch_add(address, 0);
+#else
+    return (int32_t) __atomic_load_n((int32_t *) address, __ATOMIC_ACQUIRE);
+#endif
 }
 
 int64_t fam_atomic_64_read(int64_t *address)
 {
+#ifdef NON_CACHE_COHERENT
 	return fam_atomic_64_fetch_add(address, 0);
+#else
+    return (int64_t) __atomic_load_n((int64_t *) address, __ATOMIC_ACQUIRE);
+#endif
 }
 
 extern void fam_atomic_128_read(int64_t *address, int64_t result[2])
@@ -566,14 +600,22 @@ extern void fam_atomic_128_read(int64_t *address, int64_t result[2])
 
 void fam_atomic_32_write(int32_t *address, int32_t value)
 {
+#ifdef NON_CACHE_COHERENT
 	/* This is a write operation, so no need to return prev value. */
 	(void) fam_atomic_32_swap(address, value);
+#else
+    __atomic_store_n((int32_t *) address, (int32_t) value, __ATOMIC_RELEASE);
+#endif
 }
 
 void fam_atomic_64_write(int64_t *address, int64_t value)
 {
+#ifdef NON_CACHE_COHERENT
 	/* This is a write operation, so no need to return prev value. */
 	(void) fam_atomic_64_swap(address, value);
+#else
+    __atomic_store_n((int64_t *) address, (int64_t) value, __ATOMIC_RELEASE);
+#endif
 }
 
 void fam_atomic_128_write(int64_t *address, int64_t value[2])
@@ -595,6 +637,7 @@ void fam_atomic_128_write(int64_t *address, int64_t value[2])
  */
 int32_t fam_atomic_32_fetch_and(int32_t *address, int32_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	/*
 	 * Reading the fam atomic value requires an additional system call.
 	 * So we'll just guess the value as 0 for the initial CAS. If the
@@ -611,10 +654,14 @@ int32_t fam_atomic_32_fetch_and(int32_t *address, int32_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int32_t) __atomic_fetch_and((int32_t *) address, (int32_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int64_t fam_atomic_64_fetch_and(int64_t *address, int64_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev = 0;
 
 	for (;;) {
@@ -625,10 +672,14 @@ int64_t fam_atomic_64_fetch_and(int64_t *address, int64_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int64_t) __atomic_fetch_and((int64_t *) address, (int64_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int32_t fam_atomic_32_fetch_or(int32_t *address, int32_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	int32_t prev = 0;
 
 	for (;;) {
@@ -639,10 +690,14 @@ int32_t fam_atomic_32_fetch_or(int32_t *address, int32_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int32_t) __atomic_fetch_or((int32_t *) address, (int32_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int64_t fam_atomic_64_fetch_or(int64_t *address, int64_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev = 0;
 
 	for (;;) {
@@ -653,10 +708,14 @@ int64_t fam_atomic_64_fetch_or(int64_t *address, int64_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int64_t) __atomic_fetch_or((int64_t *) address, (int64_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int32_t fam_atomic_32_fetch_xor(int32_t *address, int32_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	int32_t prev = 0;
 
 	for (;;) {
@@ -667,10 +726,14 @@ int32_t fam_atomic_32_fetch_xor(int32_t *address, int32_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int32_t) __atomic_fetch_xor((int32_t *) address, (int32_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 int64_t fam_atomic_64_fetch_xor(int64_t *address, int64_t arg)
 {
+#ifdef NON_CACHE_COHERENT
 	int64_t prev = 0;
 
 	for (;;) {
@@ -681,6 +744,9 @@ int64_t fam_atomic_64_fetch_xor(int64_t *address, int64_t arg)
 
 		prev = actual;
 	}
+#else
+    return (int64_t) __atomic_fetch_xor((int64_t *) address, (int64_t) arg, __ATOMIC_ACQ_REL);
+#endif
 }
 
 void fam_spin_lock_init(struct fam_spinlock *lock)
@@ -698,16 +764,26 @@ void fam_spin_lock(struct fam_spinlock *lock)
         };
 
         /* Fetch the current values and bump the tail by one */
+#ifdef NON_CACHE_COHERENT
         inc.head_tail = fam_atomic_64_fetch_add(&lock->head_tail, inc.head_tail);
+#else
+        inc.head_tail = __atomic_fetch_add(&lock->head_tail, inc.head_tail, __ATOMIC_ACQ_REL);
+#endif
 
         if (inc.tickets.head != inc.tickets.tail) {
                 for (;;) {
+#ifdef NON_CACHE_COHERENT
                         inc.tickets.head = fam_atomic_32_fetch_add(&lock->tickets.head, 0);
+#else
+                        inc.tickets.head = __atomic_fetch_add(&lock->tickets.head, 0, __ATOMIC_ACQ_REL);
+#endif
                         if (inc.tickets.head == inc.tickets.tail)
                                 break;
                 }
         }
+#ifdef NON_CACHE_COHERENT
         __sync_synchronize();
+#endif
 }
 
 bool fam_spin_trylock(struct fam_spinlock *lock)
@@ -715,19 +791,32 @@ bool fam_spin_trylock(struct fam_spinlock *lock)
         struct fam_spinlock old, new;
         bool ret;
 
+#ifdef NON_CACHE_COHERENT
         old.head_tail = fam_atomic_64_fetch_add(&lock->head_tail, (int64_t) 0);
+#else
+        old.head_tail = __atomic_fetch_add(&lock->head_tail, (int64_t) 0, __ATOMIC_ACQ_REL);
+#endif
         if (old.tickets.head != old.tickets.tail)
                 return 0;
 
         new.tickets.head = old.tickets.head;
         new.tickets.tail = old.tickets.tail + 1;
+#ifdef NON_CACHE_COHERENT
         ret = fam_atomic_64_compare_store(&lock->head_tail, old.head_tail, new.head_tail) == old.head_tail;
         __sync_synchronize();
+#else
+        ret = __atomic_compare_exchange_n(&lock->head_tail, &old.head_tail, 
+                new.head_tail, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+#endif
         return ret;
 }
 
 void fam_spin_unlock(struct fam_spinlock *lock)
 {
+#ifdef NON_CACHE_COHERENT
         (void) fam_atomic_32_fetch_add(&lock->tickets.head, 1);
         __sync_synchronize();
+#else
+        __atomic_fetch_add(&lock->tickets.head, (int32_t) 1, __ATOMIC_ACQ_REL);
+#endif
 }

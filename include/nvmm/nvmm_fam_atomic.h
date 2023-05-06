@@ -34,11 +34,19 @@
 
 // wrapper for unsigned integers
 inline uint32_t fam_atomic_u32_read(uint32_t* addr) {
+#ifdef NON_CACHE_COHERENT
   return (uint32_t) fam_atomic_32_read((int32_t*) addr);
+#else
+  return (uint32_t) __atomic_load_n((uint32_t *) addr, __ATOMIC_ACQUIRE);
+#endif
 }
 
 inline uint64_t fam_atomic_u64_read(uint64_t* addr) {
+#ifdef NON_CACHE_COHERENT
   return (uint64_t) fam_atomic_64_read((int64_t*) addr);
+#else
+  return (uint64_t) __atomic_load_n((uint64_t *) addr, __ATOMIC_ACQUIRE);
+#endif
 }
 
 inline void fam_atomic_u128_read(uint64_t *address, uint64_t result[2]) {
@@ -47,11 +55,19 @@ inline void fam_atomic_u128_read(uint64_t *address, uint64_t result[2]) {
 
 
 inline void fam_atomic_u32_write(uint32_t* addr, uint32_t value) {
+#ifdef NON_CACHE_COHERENT
   fam_atomic_32_write((int32_t*) addr, (int32_t) value);
+#else
+  __atomic_store_n((uint32_t *) addr, (uint32_t) value, __ATOMIC_RELEASE);
+#endif
 }
 
 inline void fam_atomic_u64_write(uint64_t* addr, uint64_t value) {
+#ifdef NON_CACHE_COHERENT
   fam_atomic_64_write((int64_t*) addr, (int64_t) value);
+#else
+  __atomic_store_n((uint64_t *) addr, (uint64_t) value, __ATOMIC_RELEASE);
+#endif
 }
 
 inline void fam_atomic_u128_write(uint64_t* addr, uint64_t value[2]) {
@@ -60,20 +76,38 @@ inline void fam_atomic_u128_write(uint64_t* addr, uint64_t value[2]) {
 
 
 inline uint32_t fam_atomic_u32_fetch_and_add(uint32_t* addr, uint32_t increment) {
+#ifdef NON_CACHE_COHERENT
   return (uint32_t) fam_atomic_32_fetch_add((int32_t*) addr, (int32_t) increment);
+#else
+  return (uint32_t) __atomic_fetch_add((uint32_t *) addr, (uint32_t) increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 inline uint64_t fam_atomic_u64_fetch_and_add(uint64_t* addr, uint64_t increment) {
+#ifdef NON_CACHE_COHERENT
   return (uint64_t) fam_atomic_64_fetch_add((int64_t*) addr, (int64_t) increment);
+#else
+  return (uint64_t) __atomic_fetch_add((uint64_t *) addr, (uint64_t) increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 
 inline uint32_t fam_atomic_u32_compare_and_store(uint32_t* addr, uint32_t oldval, uint32_t newval) {
+#ifdef NON_CACHE_COHERENT
   return (uint32_t) fam_atomic_32_compare_store((int32_t*) addr, (int32_t) oldval, (int32_t) newval);
+#else
+  __atomic_compare_exchange_n((uint32_t *) addr, &oldval, newval, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+  return oldval;
+#endif
 }
 
 inline uint64_t fam_atomic_u64_compare_and_store(uint64_t* addr, uint64_t oldval, uint64_t newval) {
+#ifdef NON_CACHE_COHERENT
   return (uint64_t) fam_atomic_64_compare_store((int64_t*) addr, (int64_t) oldval, (int64_t) newval);
+#else
+  __atomic_compare_exchange_n((uint64_t *) addr, &oldval, newval, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+  return oldval;
+#endif
 }
 
 inline void fam_atomic_u128_compare_and_store(uint64_t* addr, uint64_t oldval[2], uint64_t newval[2], uint64_t result[2]) {
@@ -81,20 +115,38 @@ inline void fam_atomic_u128_compare_and_store(uint64_t* addr, uint64_t oldval[2]
 }
 
 inline int32_t fam_atomic_32_fetch_and_add(int32_t* addr, int32_t increment) {
+#ifdef NON_CACHE_COHERENT
   return (int32_t) fam_atomic_32_fetch_add((int32_t*) addr, (int32_t) increment);
+#else
+  return (int32_t) __atomic_fetch_add((int32_t *) addr, (int32_t) increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 inline int64_t fam_atomic_64_fetch_and_add(int64_t* addr, int64_t increment) {
+#ifdef NON_CACHE_COHERENT
   return (int64_t) fam_atomic_64_fetch_add((int64_t*) addr, (int64_t) increment);
+#else
+  return (int64_t) __atomic_fetch_add((int64_t *) addr, (int64_t) increment, __ATOMIC_ACQ_REL);
+#endif
 }
 
 
 inline int32_t fam_atomic_32_compare_and_store(int32_t* addr, int32_t oldval, int32_t newval) {
+#ifdef NON_CACHE_COHERENT
   return (int32_t) fam_atomic_32_compare_store((int32_t*) addr, (int32_t) oldval, (int32_t) newval);
+#else
+  __atomic_compare_exchange_n((int32_t *) addr, &oldval, newval, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+  return oldval;
+#endif
 }
 
 inline int64_t fam_atomic_64_compare_and_store(int64_t* addr, int64_t oldval, int64_t newval) {
+#ifdef NON_CACHE_COHERENT
   return (int64_t) fam_atomic_64_compare_store((int64_t*) addr, (int64_t) oldval, (int64_t) newval);
+#else
+  __atomic_compare_exchange_n((int64_t *) addr, &oldval, newval, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+  return oldval;
+#endif
 }
 
 inline void fam_atomic_128_compare_and_store(int64_t* addr, int64_t oldval[2], int64_t newval[2], int64_t result[2]) {
